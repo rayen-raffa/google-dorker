@@ -21,6 +21,7 @@ import requests
 import re
 import sys
 import os
+import csv
 from docopt import docopt
 from bs4 import BeautifulSoup
 from time import time as timer
@@ -28,11 +29,18 @@ from functools import partial
 from multiprocessing import Pool
 from urllib.parse import unquote
 
+# Reading credentials' file
+CRED_FILE = './config.csv'
+with open(CRED_FILE) as csv_file:
+    credentials = csv.DictReader(csv_file)
+    for row in credentials:
+        print(row)
+
 # Search the dork string and retrieve urls
-def get_urls(search_string, start):
+def get_urls(search_string,API_KEY,CSE_ID,start):
     temp = []
     url = 'https://www.googleapis.com/customsearch/v1'
-    payload = {'key': API_KEY,'cx':CSE_ID, 'q': search_string, 'start': start}
+    payload = {'key':API_KEY, 'cx':CSE_ID, 'q': search_string, 'start': start}
     # my_headers = {'User-agent': 'Mozilla/11.0'}
     r = requests.get(url, params=payload) #, headers=my_headers
     print(r.text)
