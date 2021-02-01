@@ -26,14 +26,16 @@ from bs4 import BeautifulSoup
 from time import time as timer
 from functools import partial
 from multiprocessing import Pool
+from urllib.parse import unquote
 
 # Search the dork string and retrieve urls
 def get_urls(search_string, start):
     temp = []
-    url = 'http://www.google.com/search'
-    payload = {'q': search_string, 'start': start}
-    my_headers = {'User-agent': 'Mozilla/11.0'}
-    r = requests.get(url, params=payload, headers=my_headers)
+    url = 'https://www.googleapis.com/customsearch/v1'
+    payload = {'key': API_KEY,'cx':CSE_ID, 'q': search_string, 'start': start}
+    # my_headers = {'User-agent': 'Mozilla/11.0'}
+    r = requests.get(url, params=payload) #, headers=my_headers
+    print(r.text)
     soup = BeautifulSoup(r.text, 'html.parser')
     divtags = soup.find_all('div', class_='kCrYT')
 
