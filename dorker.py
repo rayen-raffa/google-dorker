@@ -22,6 +22,7 @@ import re
 import sys
 import os
 import csv
+import json
 from docopt import docopt
 from bs4 import BeautifulSoup
 from time import time as timer
@@ -29,12 +30,31 @@ from functools import partial
 from multiprocessing import Pool
 from urllib.parse import unquote
 
+
 # Reading credentials' file
-CRED_FILE = './config.csv'
-with open(CRED_FILE) as csv_file:
-    credentials = csv.DictReader(csv_file)
-    for row in credentials:
-        print(row)
+def read_credentials():
+    # Credentials' file path
+    CRED_FILE = './config.csv'
+
+    if (not os.path.isfile(CRED_FILE)):
+        print('Error : Config file {} missing ! Exiting ..')
+        sys.exit()
+
+    credentials = {
+        'current': None,
+        'total': 0
+    }
+    with open(CRED_FILE) as csv_file:
+        lines = csv.DictReader(csv_file)
+        for row in lines:
+            if (not credentials['current']):
+                credentials['current'] = 0
+            # Add (id, key) pair to dictionary
+            credentials[str(credentials['total'])] = row
+            credentials['total'] += 1
+        print(json.dumps(credentials, sort_keys=True, indent=4))
+        print('\nFound {} id,key pairs.'.format(credentials['total']))
+    return credentials
 
 # Search the dork string and retrieve urls
 def get_urls(search_string,API_KEY,CSE_ID,start):
@@ -43,7 +63,7 @@ def get_urls(search_string,API_KEY,CSE_ID,start):
     payload = {'key':API_KEY, 'cx':CSE_ID, 'q': search_string, 'start': start}
     # my_headers = {'User-agent': 'Mozilla/11.0'}
     r = requests.get(url, params=payload) #, headers=my_headers
-    print(r.text)
+    print(r.status_code)
     soup = BeautifulSoup(r.text, 'html.parser')
     divtags = soup.find_all('div', class_='kCrYT')
 
@@ -57,7 +77,7 @@ def get_urls(search_string,API_KEY,CSE_ID,start):
 # Join search terms in a single dork string
 def create_dork_string(domain, file_name):
 
-    file_path = './wordlists/{}' .format(file_name)
+    file_path = './wordlists/{}'.format(file_name)
 
     if not os.path.isfile(file_path):
         print('File "' +file_path+ '" does not exist')
@@ -112,4 +132,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # main()
+    credentials = read_credentials()
