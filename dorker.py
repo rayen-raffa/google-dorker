@@ -61,27 +61,35 @@ def read_credentials():
 # Search the dork string and retrieve urls
 def get_urls(credentials,search_string,start):
     temp = []
-    url = "https://www.googleapis.com/customsearch/v1?key={0}&cx={1}&q={2}&start={3}".format(credentials['0']['API_KEY'], credentials['0']['CSE_ID'], search_string, start)
-    # payload = {'key':credentials['0']['API_KEY'], 'cx':credentials['0']['CSE_ID'], 'q': search_string, 'start': start}
-    # my_headers = {'User-agent': 'Mozilla/11.0'}
-    try:
-        response = requests.get(url) #, headers=my_headers
-        print(response.status_code)
-        print(json.dumps(response.json()['queries']['request'][0]['searchTerms'], sort_keys=False, indent=4))
-    except Exception:
-        print("ERROR fetching from response starting at {} ! Skipping ...".format(start))
-    
-    if (response):
-        json_data = response.json()
+    for index in range(credentials['total']):
+        url = "https://www.googleapis.com/customsearch/v1?key={0}&cx={1}&q={2}&start={3}".format(credentials[str(index)]['API_KEY'], credentials[str(index)]['CSE_ID'], search_string, start)
+        # payload = {'key':credentials['0']['API_KEY'], 'cx':credentials['0']['CSE_ID'], 'q': search_string, 'start': start}
+        # my_headers = {'User-agent': 'Mozilla/11.0'}
         try:
-            items = json_data["items"]
-            print("Found {} urls ..".format(len(temp)))
-        except KeyError:
-            print("ALERT : No response found, skipping ...")
-            items = []
+            response = requests.get(url) #, headers=my_headers
+            print(response.status_code)
+            # print(json.dumps(response.json()['queries']['request'][0]['searchTerms'], sort_keys=False, indent=4))
+        except Exception:
+            print("ERROR fetching from response starting at {} ! Skipping ...".format(start))
         
-        for item in items:
-            temp.append(item["link"])
+        if (response and response.status_code == 200):
+            json_data = response.json()
+            try:
+                items = json_data["items"]
+                print("Found {} urls ..".format(len(items)))
+            except KeyError:
+                print("ALERT : No response found, skipping ...")
+                items = []
+            
+            for item in items:
+                temp.append(item["link"])
+            break
+        else:
+            if (index == credentials['total'] - 1):
+                print('CREDENTIALS KEYS EXHAUSTED !')
+                sys.exit()
+            else:
+                print('KEY,ID Pair limit exceeded ! Switching to pair n° {}'.format(index + 1))
 
     # soup = BeautifulSoup(r.text, 'html.parser')
     # divtags = soup.find_all('div', class_='kCrYT')
